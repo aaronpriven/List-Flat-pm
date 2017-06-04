@@ -1,12 +1,12 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Functions to flatten a structure of array references",
    "author" : [
-      "Aaron Priven <aaron@priven.com>"
+      "Aaron Priven <apriven@actransit.org>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150005",
    "license" : [
-      "perl_5"
+      "gpl_1"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -42,7 +42,11 @@
       },
       "runtime" : {
          "requires" : {
+            "Ref::Util" : "0.010",
             "perl" : "5.008001"
+         },
+         "suggests" : {
+            "List::Flatten::XS" : "0.02"
          }
       },
       "test" : {
@@ -52,6 +56,20 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/aaronpriven/List-Flat/issues"
+      },
+      "homepage" : "https://github.com/aaronpriven/List-Flat",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/aaronpriven/List-Flat.git",
+         "web" : "https://github.com/aaronpriven/List-Flat"
+      }
+   },
+   "version" : "0.001001",
+   "x_contributors" : [
+      "Aaron Priven <apriven@actransit.org>"
+   ],
    "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }

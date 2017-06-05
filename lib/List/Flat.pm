@@ -8,28 +8,56 @@ our $VERSION = 0.001_001;
 use Exporter 5.57 'import';
 our @EXPORT_OK = qw/flat flat_fast/;
 
-use Ref::Util;
+# if PERL_LIST_FLAT_IMPLEMENTATION environment variable is set to 'PP',
+# or $List::Flat::IMPLEMENTATION is set to 'PP', uses the pure-perl
+# versions of is_plain_arrayref and flat_fast().
+# Otherwise, uses Ref::Util and List::Flatten::XS if they can be
+# successfully loaded.
 
-{
-    my $impl = $ENV{PERL_LIST_FLAT_IMPLEMENTATION}
-        || our $IMPLEMENTATION
-        || 'XS';
-    if ($impl ne 'PP' && eval { require List::Flatten::XS; 1 }) {
+BEGIN {
+    my $impl
+      = $ENV{PERL_LIST_FLAT_IMPLEMENTATION}
+      || our $IMPLEMENTATION
+      || 'XS';
+
+    if ( $impl ne 'PP' && eval { require List::Flatten::XS; 1 } ) {
         *flat_fast = \&_flat_fast_xs;
-    } 
+    }
     else {
         *flat_fast = \&_flat_fast_pp;
     }
-}
+
+    if ( $impl ne 'PP' && eval { require Ref::Util; 1 } ) {
+        Ref::Util->import('is_plain_arrayref');
+    }
+    else {
+        *is_plain_arrayref = sub { ref($_[0]) eq 'ARRAY' };
+    }
+
+} ## tidy end: BEGIN
 
 sub flat {
 
     my @results;
     my @seens;
 
+    # this uses @_ as the queue of items to process.
+    # An item is plucked off the queue. If it's not an array ref,
+    # put it in @results.
+
+    # If it is an array ref, check to see if it's the same as any
+    # of the arrayrefs we are currently in the middle of processing.
+    # If it is, don't do anything -- skip to the next one.
+    # If it isn't, put all the items it contains back on the @_ queue.
+    # Also, for each of the items, push a reference into @seens
+    # that contains references to all the arrayrefs we are currently
+    # in the middle of processing, plus this arrayref.
+    # Note that @seens will be empty at the top level, so we must
+    # handle both when it is empty and when it is not.
+
     while (@_) {
 
-        if ( Ref::Util::is_plain_arrayref( my $element = shift @_ ) ) {
+        if ( is_plain_arrayref( my $element = shift @_ ) ) {
             if ( !defined( my $seen_r = shift @seens ) ) {
                 unshift @_, @{$element};
                 unshift @seens, ( ( [$element] ) x scalar @{$element} );
@@ -56,6 +84,14 @@ sub flat {
 
 sub _flat_fast_pp {
 
+    # this uses @_ as the queue of items to process.
+    # An item is plucked off the queue. If it's not an array ref,
+    # put it in @results.
+    # If it is an array ref, put its contents back in the queue.
+
+    # Mark Jason Dominus calls this the "agenda method" of turning
+    # a recursive function into an iterative one.
+
     my @results;
 
     while (@_) {
@@ -71,13 +107,14 @@ sub _flat_fast_pp {
 
     return wantarray ? @results : \@results;
 
-}
+} ## tidy end: sub _flat_fast_pp
 
 sub _flat_fast_xs {
-   List::Flatten::XS::flatten(\@_);
+    List::Flatten::XS::flatten( \@_ );
 }
 
 1;
+
 __END__
 
 =encoding utf-8
@@ -136,7 +173,7 @@ like
  push @a, \@a;
  @b = flat_fast(\@a);
 
-So don't do that, or use the C<flat()> function instead.
+So don't do that. Use the C<flat()> function instead.
 
 Upon loading, List::Flat looks to see if the CPAN module
 L<List::Flattened::XS|List::Flattened::XS> is available, and if it
@@ -157,15 +194,20 @@ internal pure-perl implementation of B<fast_flat()>.
 
 =head1 DEPENDENCIES
 
-List::Flat requires the use of L<Ref::Util|Ref::Util>, to speed up
-checks to see whether a list element is a reference.
+It has two optional dependencies. If they are not present, a pure
+perl implementation is used instead.
 
-If available it will use L<List::Flattened::XS|List::Flattened::XS>
-to significantly speed up C<flat_fast()>.
+=over
+
+=item L<Ref::Util|Ref::Util>
+
+=item L<List::Flattened::XS|List::Flattened::XS>
+
+=back
 
 =head1 SEE ALSO
 
-There are other modules on CPAN that do similar things.
+There are several other modules on CPAN that do similar things.
 
 =over
 
@@ -190,7 +232,8 @@ This may be useful in some circumstances.
 =item List::Flatten::Recursive
 
 The code from this module works well, but it seems to be somewhat
-slower than List::Flat due to its use of recursive subroutine calls
+slower than List::Flat (in my testing; better testing welcome) 
+due to its use of recursive subroutine calls
 rather than using a queue of items to be processed.  Moreover, it
 is reliant on Exporter::Simple, which does not pass tests on perls
 newer than 5.10.
@@ -219,7 +262,7 @@ Ryan C. Thompson's L<List::Flatten::Recursive|List::Flatten::Recursive>
 inspired the creation of the C<flat()> function.
 
 Mark Jason Dominus's book L<Higher-Order Perl|http://hop.perl.plover.com> 
-was and continues to be extremely helpful and informative. 
+was and continues to be extremely helpful and informative.  
 
 Kei Kamikawa's L<List::Flatten::XS|List::Flatten::XS> makes C<flat_fast()>
 much, much faster.
@@ -227,6 +270,9 @@ much, much faster.
 =head1 BUGS AND LIMITATIONS
 
 There is no XS version of the C<flat()> function.
+
+If you bless something that's not an array reference into a class called
+'ARRAY', the pure-perl versions will break. But why would you do that?
 
 =head1 AUTHOR
 

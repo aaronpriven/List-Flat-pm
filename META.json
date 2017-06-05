@@ -58,18 +58,18 @@
    "release_status" : "unstable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://github.com/aaronpriven/List-Flat/issues"
+         "web" : "https://github.com/aaronpriven/List-Flat-pm/issues"
       },
-      "homepage" : "https://github.com/aaronpriven/List-Flat",
+      "homepage" : "https://github.com/aaronpriven/List-Flat-pm",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/aaronpriven/List-Flat.git",
-         "web" : "https://github.com/aaronpriven/List-Flat"
+         "url" : "git://github.com/aaronpriven/List-Flat-pm.git",
+         "web" : "https://github.com/aaronpriven/List-Flat-pm"
       }
    },
    "version" : "0.001001",
    "x_contributors" : [
-      "Aaron Priven <apriven@actransit.org>"
+      "Aaron Priven <aaron@priven.com>"
    ],
    "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }

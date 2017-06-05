@@ -50,7 +50,7 @@ of array references into a single flat list.
         push @a, \@a;
         @b = flat_fast(\@a);
 
-    So don't do that, or use the `flat()` function instead.
+    So don't do that. Use the `flat()` function instead.
 
     Upon loading, List::Flat looks to see if the CPAN module
     [List::Flattened::XS](https://metacpan.org/pod/List::Flattened::XS) is available, and if it
@@ -69,15 +69,15 @@ internal pure-perl implementation of **fast\_flat()**.
 
 # DEPENDENCIES
 
-List::Flat requires the use of [Ref::Util](https://metacpan.org/pod/Ref::Util), to speed up
-checks to see whether a list element is a reference.
+It has two optional dependencies. If they are not present, a pure
+perl implementation is used instead.
 
-If available it will use [List::Flattened::XS](https://metacpan.org/pod/List::Flattened::XS)
-to significantly speed up `flat_fast()`.
+- [Ref::Util](https://metacpan.org/pod/Ref::Util)
+- [List::Flattened::XS](https://metacpan.org/pod/List::Flattened::XS)
 
 # SEE ALSO
 
-There are other modules on CPAN that do similar things.
+There are several other modules on CPAN that do similar things.
 
 - Array::DeepUtils
 
@@ -100,7 +100,8 @@ There are other modules on CPAN that do similar things.
 - List::Flatten::Recursive
 
     The code from this module works well, but it seems to be somewhat
-    slower than List::Flat due to its use of recursive subroutine calls
+    slower than List::Flat (in my testing; better testing welcome) 
+    due to its use of recursive subroutine calls
     rather than using a queue of items to be processed.  Moreover, it
     is reliant on Exporter::Simple, which does not pass tests on perls
     newer than 5.10.
@@ -127,7 +128,7 @@ Ryan C. Thompson's [List::Flatten::Recursive](https://metacpan.org/pod/List::Fla
 inspired the creation of the `flat()` function.
 
 Mark Jason Dominus's book [Higher-Order Perl](http://hop.perl.plover.com) 
-was and continues to be extremely helpful and informative. 
+was and continues to be extremely helpful and informative.  
 
 Kei Kamikawa's [List::Flatten::XS](https://metacpan.org/pod/List::Flatten::XS) makes `flat_fast()`
 much, much faster.
@@ -135,6 +136,9 @@ much, much faster.
 # BUGS AND LIMITATIONS
 
 There is no XS version of the `flat()` function.
+
+If you bless something that's not an array reference into a class called
+'ARRAY', the pure-perl versions will break. But why would you do that?
 
 # AUTHOR
 

@@ -65,7 +65,7 @@ sub flat {
             elsif ( !grep { $element == $_ } @$seen_r ) {
                 # until the recursion gets very deep, the overhead in calling
                 # List::Util::none seems to be taking more time than the
-                # additional search
+                # additional comparisons required by grep
                 unshift @_, @{$element};
                 unshift @seens,
                   ( ( [ @$seen_r, $element ] ) x scalar @{$element} );

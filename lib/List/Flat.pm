@@ -6,35 +6,24 @@ use warnings;
 our $VERSION = 0.001_001;
 
 use Exporter 5.57 'import';
-our @EXPORT_OK = qw/flat flat_fast/;
+our @EXPORT_OK = qw/flat flatx/;
 
-# if PERL_LIST_FLAT_IMPLEMENTATION environment variable is set to 'PP',
-# or $List::Flat::IMPLEMENTATION is set to 'PP', uses the pure-perl
-# versions of is_plain_arrayref and flat_fast().
-# Otherwise, uses Ref::Util and List::Flatten::XS if they can be
-# successfully loaded.
+# if PERL_LIST_FLAT_NO_REF_UTIL environment variable is set to a true
+# value, or $List::Flat::NO_REF_UTIL is set to a true value,
+# uses the pure-perl version of is_plain_arrayref.
+# Otherwise, uses Ref::Util if it can be successfully loaded.
 
 BEGIN {
-    my $impl
-      = $ENV{PERL_LIST_FLAT_IMPLEMENTATION}
-      || our $IMPLEMENTATION
-      || 'XS';
+    my $impl = $ENV{PERL_LIST_FLAT_NO_REF_UTIL}
+      || our $NO_REF_UTIL;
 
-    if ( $impl ne 'PP' && eval { require List::Flatten::XS; 1 } ) {
-        *flat_fast = \&_flat_fast_xs;
-    }
-    else {
-        *flat_fast = \&_flat_fast_pp;
-    }
-
-    if ( $impl ne 'PP' && eval { require Ref::Util; 1 } ) {
+    if ( !$impl && eval { require Ref::Util; 1 } ) {
         Ref::Util->import('is_plain_arrayref');
     }
     else {
-        *is_plain_arrayref = sub { ref($_[0]) eq 'ARRAY' };
+        *is_plain_arrayref = sub { ref( $_[0] ) eq 'ARRAY' };
     }
-
-} ## tidy end: BEGIN
+}
 
 sub flat {
 
@@ -82,7 +71,7 @@ sub flat {
 
 } ## tidy end: sub flat
 
-sub _flat_fast_pp {
+sub flatx {
 
     # this uses @_ as the queue of items to process.
     # An item is plucked off the queue. If it's not an array ref,
@@ -107,11 +96,7 @@ sub _flat_fast_pp {
 
     return wantarray ? @results : \@results;
 
-} ## tidy end: sub _flat_fast_pp
-
-sub _flat_fast_xs {
-    List::Flatten::XS::flatten( \@_ );
-}
+} ## tidy end: sub flatx
 
 1;
 
@@ -129,14 +114,14 @@ This documentation refers to version 0.001_001
 
 =head1 SYNOPSIS
 
-    use List::Flat(qw/flat flat_fast/);
+    use List::Flat(qw/flat flatx/);
     
     my @list = ( 1, [ 2, 3, [ 4 ], 5 ] , 6 );
     
-    my @newlist = flat_fast(@list);
+    my @newlist = flatx(@list);
     # ( 1, 2, 3, 4, 5, 6 )
 
-    push @list, [ \@list, 7, 8, 9 ];
+    push @list, [ 7, \@list, 8, 9 ];
     my @newerlist = flat(@list);
     # ( 1, 2, 3, 4, 5, 6, 7, 8, 9 )
 
@@ -158,52 +143,53 @@ flat, so there are no (non-blessed) array references in the result.
 If there are any circular references -- an array reference that has
 an entry that points to itself, or an entry that points to another
 array reference that refers to the first array reference -- it will
-not descend infinitely, and will skip those.
+not descend infinitely. It skips any reference that it is currently
+processing. So:
 
-=item B<flat_fast()>
+ my @list = (1, 2, 3);
+ push @list, \@list;
+ my @flat = flat(@list);
+ # (1, 2, 3)
+ 
+But it will re-process it again if it's repeated but not circular.
+
+ my @sublist = ( 4, 5, 6 );
+ my @repeated = ( \@sublist, \@sublist, \@sublist);
+ my @repeated_flat = flat (@repeated);
+ # (4, 5, 6, 4, 5, 6, 4, 5, 6)
+
+=item B<flatx()>
 
 This function takes its arguments and returns either a list (in
 list context) or an array reference (in scalar context) that is
 flat, so there are no (non-blessed) array references in the result.
 
-It does not check for circular references, and so will go into an infinite loop with something
-like
+It does not check for circular references, and so will go into an 
+infinite loop with something like
 
  @a = ( 1, 2, 3);
  push @a, \@a;
- @b = flat_fast(\@a);
+ @b = flatx(\@a);
 
-So don't do that. Use the C<flat()> function instead.
+So don't do that. Use C<flat()> instead.
 
-Upon loading, List::Flat looks to see if the CPAN module
-L<List::Flattened::XS|List::Flattened::XS> is available, and if it
-is, uses that for C<flat_fast()> (unless overridden; see L<CONFIGURATION AND
-ENVIRONMENT|/CONFIGURATION AND ENVIRONMENT> below).  List::Flattened::XS
-is much faster than the perl version, but even the perl version of
-C<flat_fast()> is about twice as fast as C<flat()>.
+When it is fed non-infinite lists, this function seems to be about 
+twice as fast as C<flat()>.
 
 =back
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-The flat_fast function will normally use List::Flattened::XS if it
-is available to do the actual flattening, but if the environment
-variable $PERL_LIST_FLAT_IMPLEMENTATION is set to 'PP', or the perl
-variable List::Flat::IMPLEMENTATION is set to 'PP', it will use its
-internal pure-perl implementation of B<fast_flat()>.
+The functions will normally use Ref::Util to determine whether an
+element is an array reference or not, but if the environment variable
+$PERL_LIST_FLAT_NO_REF_UTIL is set to a true value, or the perl
+variable List::Flat::NO_REF_UTIL is set to a true value, it will
+use its internal pure-perl implementation.
 
 =head1 DEPENDENCIES
 
-It has two optional dependencies. If they are not present, a pure
-perl implementation is used instead.
-
-=over
-
-=item L<Ref::Util|Ref::Util>
-
-=item L<List::Flattened::XS|List::Flattened::XS>
-
-=back
+It has one optional dependency, L<Ref::Util|Ref::Util>. 
+If it is not present, a pure perl implementation is used instead.
 
 =head1 SEE ALSO
 
@@ -227,30 +213,55 @@ is returned as
 
   1, 2, 3, [ 4 ]
 
-This may be useful in some circumstances.
+This is, I suppose, useful in some circumstance or other.
 
 =item List::Flatten::Recursive
 
 The code from this module works well, but it seems to be somewhat
-slower than List::Flat (in my testing; better testing welcome) 
-due to its use of recursive subroutine calls
-rather than using a queue of items to be processed.  Moreover, it
-is reliant on Exporter::Simple, which does not pass tests on perls
-newer than 5.10.
+slower than List::Flat (in my testing; better testing welcome) due
+to its use of recursive subroutine calls rather than using a queue
+of items to be processed.  Moreover, it is reliant on Exporter::Simple,
+which apparently does not pass tests on perls newer than 5.10.
 
 =item List::Flatten::XS
 
-This is very fast and has the feature of being able to specify the 
-level to which the array is flattened (so one can ask for the first and second
-levels to be flat, but the third level preserved as references).
+This is very fast and is worth using if one can accept its limitations,
+which are, however, significant:
 
-It is worth using if its limitations can be accepted. First,
-obviously, like all XS modules it requires a C compiler to be
-installed. Second, it cannot handle circular references. Third, it
-must be passed an array refeernce rather than a list.
+=over
 
-List::Fast uses this module to speed up flat_fast when it is available on the
-local system.
+=item *
+
+It flattens blessed array references as well as unblessed ones,
+which means that any array-based objects (for example,
+L<Path::Tiny|Path::Tiny> objects) will be flattened as well.
+Array-based objects aren't all that common, but that's not usually
+what's desired.
+
+=item *
+
+Like all XS modules it requires a C compiler on the host system to be
+installed, or some kind of special binary installation (e.g., ActiveState's 
+ppm).
+
+=item *
+
+It cannot handle circular references. 
+
+=item *
+
+It must be passed an array refeernce rather than a list.
+
+=back
+
+It does have the potentially useful feature of being able to specify
+the level to which the array is flattened (so one can ask for the
+first and second levels to be flat, but the third level preserved
+as references).
+
+At one point in the development of List::Flat there was an intent to use this
+module to speed up performance, but it wasn't acceptable that it flattened
+objects.
 
 =back
 
@@ -264,15 +275,10 @@ inspired the creation of the C<flat()> function.
 Mark Jason Dominus's book L<Higher-Order Perl|http://hop.perl.plover.com> 
 was and continues to be extremely helpful and informative.  
 
-Kei Kamikawa's L<List::Flatten::XS|List::Flatten::XS> makes C<flat_fast()>
-much, much faster.
-
 =head1 BUGS AND LIMITATIONS
 
-There is no XS version of the C<flat()> function.
-
-If you bless something that's not an array reference into a class called
-'ARRAY', the pure-perl versions will break. But why would you do that?
+If you bless something into a class called 'ARRAY', the pure-perl version 
+will break. But why would you do that?
 
 =head1 AUTHOR
 

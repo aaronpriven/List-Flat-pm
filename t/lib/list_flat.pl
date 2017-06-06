@@ -12,6 +12,21 @@ my @flat_complex = (qw/a b c d e f g h/);
 
 deep_test_both( \@complex, \@flat_complex, 'Flatten complex array' );
 
+my @sublist       = (qw/w x y/);
+my @repeated      = ( qw/z AA/, \@sublist, qw/BB/, \@sublist );
+my @flat_repeated = (qw/z AA w x y BB w x y/);
+
+deep_test_both( \@repeated, \@flat_repeated,
+    'Flatten complex array with repeated sublists' );
+
+my @circlist = (qw/CC DD EE/);
+push @circlist, [@circlist];
+my @test_circlist = flat(qw/CC DD EE/);
+my @flat_circlist = (qw/CC DD EE/);
+
+deep_test_flat( \@test_circlist, \@flat_circlist,
+    'Flatten array with circular reference' );
+
 require Scalar::Util;
 
 my $blessed = bless [ 't', ['u'] ], 'Dummyclass';
@@ -61,8 +76,7 @@ sub deep_test_flatx {
     my @flattened_array     = flatx(@list);
     my $flattened_scalarref = flatx(@list);
 
-    is_deeply( \@flat, \@flattened_array, "flatx, list context: $description" )
-      ;
+    is_deeply( \@flat, \@flattened_array, "flatx, list context: $description" );
     is_deeply( \@flat, $flattened_scalarref,
         "flatx, scalar context: $description" );
 

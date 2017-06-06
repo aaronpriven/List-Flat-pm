@@ -51,7 +51,9 @@ sub flat {
                 unshift @_, @{$element};
                 unshift @seens, ( ( [$element] ) x scalar @{$element} );
             }
+            ## no critic (ProhibitBooleanGrep)
             elsif ( !grep { $element == $_ } @$seen_r ) {
+                ## use critic
                 # until the recursion gets very deep, the overhead in calling
                 # List::Util::none seems to be taking more time than the
                 # additional comparisons required by grep
@@ -102,7 +104,7 @@ sub flatx {
 
 __END__
 
-=encoding utf-8
+=encoding utf8
 
 =head1 NAME
 

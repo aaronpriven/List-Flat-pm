@@ -1,6 +1,6 @@
 use strict;
 use Test::More 0.98;
-use List::Flat(qw/flatx flat/);
+use List::Flat(qw/flat flat_f flat_r/);
 
 diag('Use Ref::Util for checking array references');
 

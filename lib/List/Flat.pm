@@ -6,7 +6,7 @@ use warnings;
 our $VERSION = 0.001_001;
 
 use Exporter 5.57 'import';
-our @EXPORT_OK = qw/flat flatx/;
+our @EXPORT_OK = qw/flat flat_r flat_f/;
 
 # if PERL_LIST_FLAT_NO_REF_UTIL environment variable is set to a true
 # value, or $List::Flat::NO_REF_UTIL is set to a true value,
@@ -25,55 +25,82 @@ BEGIN {
     }
 }
 
-sub flat {
+{
+    my $croak;
 
-    my @results;
-    my @seens;
+    sub flat {
+        $croak = 1;
+        return &_flat;
+        # call _flat with current @_
+    }
 
-    # this uses @_ as the queue of items to process.
-    # An item is plucked off the queue. If it's not an array ref,
-    # put it in @results.
+    sub flat_r {
+        undef $croak;
+        return &_flat;
+        # call _flat with current @_
+    }
 
-    # If it is an array ref, check to see if it's the same as any
-    # of the arrayrefs we are currently in the middle of processing.
-    # If it is, don't do anything -- skip to the next one.
-    # If it isn't, put all the items it contains back on the @_ queue.
-    # Also, for each of the items, push a reference into @seens
-    # that contains references to all the arrayrefs we are currently
-    # in the middle of processing, plus this arrayref.
-    # Note that @seens will be empty at the top level, so we must
-    # handle both when it is empty and when it is not.
+    sub _flat {
 
-    while (@_) {
+        my @results;
+        my @seens;
 
-        if ( is_plain_arrayref( my $element = shift @_ ) ) {
-            if ( !defined( my $seen_r = shift @seens ) ) {
-                unshift @_, @{$element};
-                unshift @seens, ( ( [$element] ) x scalar @{$element} );
+        # this uses @_ as the queue of items to process.
+        # An item is plucked off the queue. If it's not an array ref,
+        # put it in @results.
+
+        # If it is an array ref, check to see if it's the same as any
+        # of the arrayrefs we are currently in the middle of processing.
+        # If it is, either croak if called as flat, or if called as
+        # flat_r, don't do anything -- skip to the next one.
+        # If it hasn't been seen before, put all the items it
+        # contains back on the @_ queue.
+        # Also, for each of the items, push a reference into @seens
+        # that contains references to all the arrayrefs we are currently
+        # in the middle of processing, plus this arrayref.
+        # Note that @seens will be empty at the top level, so we must
+        # handle both when it is empty and when it is not.
+
+        while (@_) {
+
+            if ( is_plain_arrayref( my $element = shift @_ ) ) {
+                if ( !defined( my $seen_r = shift @seens ) ) {
+                    unshift @_, @{$element};
+                    unshift @seens, ( ( [$element] ) x scalar @{$element} );
+                }
+                ## no critic (ProhibitBooleanGrep)
+                elsif ( !grep { $element == $_ } @$seen_r ) {
+                    ## use critic
+                   # until the recursion gets very deep, the overhead in calling
+                   # List::Util::none seems to be taking more time than the
+                   # additional comparisons required by grep
+                    unshift @_, @{$element};
+                    unshift @seens,
+                      ( ( [ @$seen_r, $element ] ) x scalar @{$element} );
+                }
+                elsif ($croak) {
+                    require Carp;
+                    Carp::croak(
+                        "Circular reference passed to " . ( caller(1) )[3] );
+                    # subroutine that was called
+                }
+                # else do nothing
+            } ## tidy end: if ( is_plain_arrayref...)
+
+            else {    # not arrayref
+                shift @seens;
+                push @results, $element;
             }
-            ## no critic (ProhibitBooleanGrep)
-            elsif ( !grep { $element == $_ } @$seen_r ) {
-                ## use critic
-                # until the recursion gets very deep, the overhead in calling
-                # List::Util::none seems to be taking more time than the
-                # additional comparisons required by grep
-                unshift @_, @{$element};
-                unshift @seens,
-                  ( ( [ @$seen_r, $element ] ) x scalar @{$element} );
-            }
-        }
-        else {
-            shift @seens;
-            push @results, $element;
-        }
 
-    } ## tidy end: while (@_)
+        } ## tidy end: while (@_)
 
-    return wantarray ? @results : \@results;
+        return wantarray ? @results : \@results;
 
-} ## tidy end: sub flat
+    } ## tidy end: sub _flat
 
-sub flatx {
+}
+
+sub flat_f {
 
     # this uses @_ as the queue of items to process.
     # An item is plucked off the queue. If it's not an array ref,
@@ -98,7 +125,7 @@ sub flatx {
 
     return wantarray ? @results : \@results;
 
-} ## tidy end: sub flatx
+} ## tidy end: sub flat_f
 
 1;
 
@@ -116,17 +143,20 @@ This documentation refers to version 0.001_001
 
 =head1 SYNOPSIS
 
-    use List::Flat(qw/flat flatx/);
+    use List::Flat(qw/flat flat_f flat_r/);
     
     my @list = ( 1, [ 2, 3, [ 4 ], 5 ] , 6 );
     
-    my @newlist = flatx(@list);
+    my @newlist = flat_f(@list);
     # ( 1, 2, 3, 4, 5, 6 )
 
     push @list, [ 7, \@list, 8, 9 ];
-    my @newerlist = flat(@list);
+    my @newerlist = flat_r(@list);
     # ( 1, 2, 3, 4, 5, 6, 7, 8, 9 )
-
+    
+    my @evennewerlist = flat(@list);
+    # throws exception
+    
 =head1 DESCRIPTION
 
 List::Flat is a module with functions to flatten a deep structure
@@ -145,6 +175,29 @@ flat, so there are no (non-blessed) array references in the result.
 If there are any circular references -- an array reference that has
 an entry that points to itself, or an entry that points to another
 array reference that refers to the first array reference -- it will
+throw an exception.
+
+ my @list = (1, 2, 3);
+ push @list, \@list;
+ my @flat = flat(@list);
+ # throws exception
+ 
+But it will process it again if it's repeated but not circular.
+
+ my @sublist = ( 4, 5, 6 );
+ my @repeated = ( \@sublist, \@sublist, \@sublist);
+ my @repeated_flat = flat (@repeated);
+ # (4, 5, 6, 4, 5, 6, 4, 5, 6)
+
+=item B<flat_r()>
+
+This function takes its arguments and returns either a list (in
+list context) or an array reference (in scalar context) that is
+flat, so there are no (non-blessed) array references in the result.
+
+If there are any circular references -- an array reference that has
+an entry that points to itself, or an entry that points to another
+array reference that refers to the first array reference -- it will
 not descend infinitely. It skips any reference that it is currently
 processing. So:
 
@@ -153,14 +206,14 @@ processing. So:
  my @flat = flat(@list);
  # (1, 2, 3)
  
-But it will re-process it again if it's repeated but not circular.
+But it will process it again if it's repeated but not circular.
 
  my @sublist = ( 4, 5, 6 );
  my @repeated = ( \@sublist, \@sublist, \@sublist);
  my @repeated_flat = flat (@repeated);
  # (4, 5, 6, 4, 5, 6, 4, 5, 6)
-
-=item B<flatx()>
+ 
+=item B<flat_f()>
 
 This function takes its arguments and returns either a list (in
 list context) or an array reference (in scalar context) that is
@@ -171,9 +224,9 @@ infinite loop with something like
 
  @a = ( 1, 2, 3);
  push @a, \@a;
- @b = flatx(\@a);
+ @b = flat_f(\@a);
 
-So don't do that. Use C<flat()> instead.
+So don't do that. Use C<flat()> or C<flat_r()> instead.
 
 When it is fed non-infinite lists, this function seems to be about 
 twice as fast as C<flat()>.
@@ -185,8 +238,8 @@ twice as fast as C<flat()>.
 The functions will normally use Ref::Util to determine whether an
 element is an array reference or not, but if the environment variable
 $PERL_LIST_FLAT_NO_REF_UTIL is set to a true value, or the perl
-variable List::Flat::NO_REF_UTIL is set to a true value, it will
-use its internal pure-perl implementation.
+variable List::Flat::NO_REF_UTIL is set to a true value before
+importing it, it will use its internal pure-perl implementation.
 
 =head1 DEPENDENCIES
 
@@ -219,16 +272,17 @@ This is, I suppose, useful in some circumstance or other.
 
 =item List::Flatten::Recursive
 
-The code from this module works well, but it seems to be somewhat
-slower than List::Flat (in my testing; better testing welcome) due
-to its use of recursive subroutine calls rather than using a queue
-of items to be processed.  Moreover, it is reliant on Exporter::Simple,
-which apparently does not pass tests on perls newer than 5.10.
+The code from this module works well and does the same thing as
+C<flat_r()>, but it seems to be somewhat slower than List::Flat (in
+my testing; better testing welcome) due to its use of recursive
+subroutine calls rather than using a queue of items to be processed.
+Moreover, it is reliant on Exporter::Simple, which apparently does
+not pass tests on perls newer than 5.10.
 
 =item List::Flatten::XS
 
-This is very fast and is worth using if one can accept its limitations,
-which are, however, significant:
+This is very fast and is worth using if one can accept its limitations.
+These are, however, significant:
 
 =over
 
@@ -272,7 +326,10 @@ It is certainly possible that there are others.
 =head1 ACKNOWLEDGEMENTS
 
 Ryan C. Thompson's L<List::Flatten::Recursive|List::Flatten::Recursive> 
-inspired the creation of the C<flat()> function.
+inspired the creation of the C<flat_r()> function.
+
+Aristotle Pagaltzis suggested throwing an exception upon seeing
+a circular reference rather than simply skipping it.
 
 Mark Jason Dominus's book L<Higher-Order Perl|http://hop.perl.plover.com> 
 was and continues to be extremely helpful and informative.  

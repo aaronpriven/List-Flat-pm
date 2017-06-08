@@ -20,12 +20,22 @@ deep_test_both( \@repeated, \@flat_repeated,
     'Flatten complex array with repeated sublists' );
 
 my @circlist = (qw/CC DD EE/);
-push @circlist, [@circlist];
+push @circlist, \@circlist;
 my @test_circlist = flat(qw/CC DD EE/);
 my @flat_circlist = (qw/CC DD EE/);
 
-deep_test_flat( \@test_circlist, \@flat_circlist,
-    'Flatten array with circular reference' );
+deep_test_flat_r( \@test_circlist, \@flat_circlist,
+    'flat_r: Flatten array with circular reference' );
+
+SKIP: {
+
+    skip( 'Test::Fatal not loaded', 1 )
+      unless eval { require Test::Fatal; 1 };
+
+    my $x = Test::Fatal::exception( sub { flat(@circlist); } );
+    like( $x, qr/Circular reference/i, 'flat() dies with circular reference' );
+
+}
 
 require Scalar::Util;
 
@@ -33,7 +43,8 @@ my $blessed = bless [ 't', ['u'] ], 'Dummyclass';
 
 my @blessed_list       = ( 's', $blessed, 'v' );
 my @test_blessed_list  = flat(@blessed_list);
-my @testx_blessed_list = flatx(@blessed_list);
+my @testf_blessed_list = flat_f(@blessed_list);
+my @testr_blessed_list = flat_r(@blessed_list);
 
 is( Scalar::Util::blessed $blessed_list[1],
     Scalar::Util::blessed $test_blessed_list[1],
@@ -41,13 +52,19 @@ is( Scalar::Util::blessed $blessed_list[1],
 );
 
 is( Scalar::Util::blessed $blessed_list[1],
-    Scalar::Util::blessed $testx_blessed_list[1],
-    "flatx: Blessed member is not flattened"
+    Scalar::Util::blessed $testr_blessed_list[1],
+    "flat_r: Blessed member is not flattened"
+);
+
+is( Scalar::Util::blessed $blessed_list[1],
+    Scalar::Util::blessed $testf_blessed_list[1],
+    "flat_f: Blessed member is not flattened"
 );
 
 sub deep_test_both {
     deep_test_flat(@_);
-    deep_test_flatx(@_);
+    deep_test_flat_r(@_);
+    deep_test_flat_f(@_);
 }
 
 sub deep_test_flat {
@@ -67,18 +84,36 @@ sub deep_test_flat {
 
 }
 
-sub deep_test_flatx {
+sub deep_test_flat_r {
 
     my @list        = @{ +shift };
     my @flat        = @{ +shift };
     my $description = shift;
 
-    my @flattened_array     = flatx(@list);
-    my $flattened_scalarref = flatx(@list);
+    my @flattened_array     = flat_r(@list);
+    my $flattened_scalarref = flat_r(@list);
 
-    is_deeply( \@flat, \@flattened_array, "flatx, list context: $description" );
+    is_deeply( \@flat, \@flattened_array, "flat, list context: $description" );
     is_deeply( \@flat, $flattened_scalarref,
-        "flatx, scalar context: $description" );
+        "flat, scalar context: $description" );
+
+    return;
+
+}
+
+sub deep_test_flat_f {
+
+    my @list        = @{ +shift };
+    my @flat        = @{ +shift };
+    my $description = shift;
+
+    my @flattened_array     = flat_f(@list);
+    my $flattened_scalarref = flat_f(@list);
+
+    is_deeply( \@flat, \@flattened_array,
+        "flat_f, list context: $description" );
+    is_deeply( \@flat, $flattened_scalarref,
+        "flat_f, scalar context: $description" );
 
     return;
 

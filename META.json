@@ -42,11 +42,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Ref::Util" : "0.010",
             "perl" : "5.008001"
-         },
-         "suggests" : {
-            "List::Flatten::XS" : "0.02"
          }
       },
       "test" : {
@@ -67,7 +63,7 @@
          "web" : "https://github.com/aaronpriven/List-Flat-pm"
       }
    },
-   "version" : "0.001001",
+   "version" : "0.001002",
    "x_contributors" : [
       "Aaron Priven <aaron@priven.com>"
    ],

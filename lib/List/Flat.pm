@@ -3,7 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = 0.001_001;
+our $VERSION = 0.001_002;
 
 use Exporter 5.57 'import';
 our @EXPORT_OK = qw/flat flat_r flat_f/;
@@ -139,7 +139,7 @@ List::Flat - Functions to flatten a structure of array references
 
 =head1 VERSION
 
-This documentation refers to version 0.001_001
+This documentation refers to version 0.001_002
 
 =head1 SYNOPSIS
 
@@ -268,7 +268,7 @@ is returned as
 
   1, 2, 3, [ 4 ]
 
-This is, I suppose, useful in some circumstance or other.
+This might be, I suppose, useful in some circumstance or other.
 
 =item List::Flatten::Recursive
 
@@ -302,7 +302,7 @@ ppm).
 
 =item *
 
-It cannot handle circular references. 
+It goes into an infinite loop with circular references. 
 
 =item *
 
@@ -362,5 +362,4 @@ later version, or
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT  ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE.
-
+MERCHANTABILITY or  FITNESS FOR A PARTICULAR PURPOSE. 

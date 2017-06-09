@@ -180,6 +180,9 @@ a circular reference rather than simply skipping it.
 Mark Jason Dominus's book [Higher-Order Perl](http://hop.perl.plover.com) 
 was and continues to be extremely helpful and informative.  
 
+[Toby Inkster](http://toby.ink) contributed a patch to slightly 
+speed up `flat()` and `flat_r()`.
+
 # BUGS AND LIMITATIONS
 
 If you bless something into a class called 'ARRAY', the pure-perl version 

@@ -335,6 +335,9 @@ a circular reference rather than simply skipping it.
 Mark Jason Dominus's book L<Higher-Order Perl|http://hop.perl.plover.com> 
 was and continues to be extremely helpful and informative.  
 
+L<Toby Inkster|http://toby.ink> contributed a patch to slightly 
+speed up C<flat()> and C<flat_r()>.
+
 =head1 BUGS AND LIMITATIONS
 
 If you bless something into a class called 'ARRAY', the pure-perl version 

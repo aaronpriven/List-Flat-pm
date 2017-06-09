@@ -4,9 +4,9 @@
       "Aaron Priven <apriven@actransit.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150010",
    "license" : [
-      "unknown"
+      "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -63,7 +63,7 @@
          "web" : "https://github.com/aaronpriven/List-Flat-pm"
       }
    },
-   "version" : "0.001002",
+   "version" : "0.001_002",
    "x_contributors" : [
       "Aaron Priven <aaron@priven.com>"
    ],

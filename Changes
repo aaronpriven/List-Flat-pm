@@ -2,7 +2,7 @@ Revision history for Perl extension List-Flat
 
 {{$NEXT}}
 
-0.001002 2017-06-09T04:51:43Z
+0.001_002 2017-06-09T05:23:34Z
 
     - Added flat() that croaks on circular references,
       renamed old flat to flat_r, renamed old flatx to flat_f

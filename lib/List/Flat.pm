@@ -3,7 +3,8 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = 0.001_002;
+our $VERSION = "0.001_002";
+$VERSION = eval $VERSION;
 
 use Exporter 5.57 'import';
 our @EXPORT_OK = qw/flat flat_r flat_f/;

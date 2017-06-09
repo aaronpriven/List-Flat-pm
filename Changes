@@ -2,6 +2,9 @@ Revision history for Perl extension List-Flat
 
 {{$NEXT}}
 
+    - Implement slightly faster tail call from flat() and 
+      flat_r() to private sub _flat()
+
 0.001_002 2017-06-09T05:23:34Z
 
     - Added flat() that croaks on circular references,

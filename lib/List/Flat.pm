@@ -81,11 +81,11 @@ BEGIN {
                 }
                 elsif ($croak) {
                     require Carp;
-                    Carp::croak(
-                        "Circular reference passed to " . ( caller(1) )[3] );
-                    # subroutine that was called
+                    Carp::croak( 'Circular reference passed to '
+                          . __PACKAGE__
+                          . '::flat' );
                 }
-                # else do nothing
+                     # else do nothing
             } ## tidy end: if ( is_plain_arrayref...)
 
             else {    # not arrayref

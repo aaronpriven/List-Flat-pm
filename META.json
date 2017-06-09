@@ -10,7 +10,7 @@
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "List-Flat",
    "no_index" : {
@@ -65,7 +65,8 @@
    },
    "version" : "0.001_002",
    "x_contributors" : [
+      "Toby Inkster <github@toby.ink>",
       "Aaron Priven <aaron@priven.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "x_serialization_backend" : "JSON::PP version 2.94"
 }

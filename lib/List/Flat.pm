@@ -31,13 +31,13 @@ BEGIN {
 
     sub flat {
         $croak = 1;
-        return &_flat;
+        goto &_flat;
         # call _flat with current @_
     }
 
     sub flat_r {
         undef $croak;
-        return &_flat;
+        goto &_flat;
         # call _flat with current @_
     }
 

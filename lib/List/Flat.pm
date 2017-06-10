@@ -22,7 +22,8 @@ BEGIN {
         Ref::Util->import('is_plain_arrayref');
     }
     else {
-        *is_plain_arrayref = sub { ref( $_[0] ) eq 'ARRAY' };
+        require Scalar::Util;
+        *is_plain_arrayref = sub { ref( $_[0] ) eq 'ARRAY' and not blessed( $_[0] ) };
     }
 }
 
@@ -337,11 +338,6 @@ was and continues to be extremely helpful and informative.
 
 L<Toby Inkster|http://toby.ink> contributed a patch to slightly 
 speed up C<flat()> and C<flat_r()>.
-
-=head1 BUGS AND LIMITATIONS
-
-If you bless something into a class called 'ARRAY', the pure-perl version 
-will break. But why would you do that?
 
 =head1 AUTHOR
 

@@ -23,7 +23,7 @@ BEGIN {
     }
     else {
         require Scalar::Util;
-        *is_plain_arrayref = sub { ref( $_[0] ) eq 'ARRAY' and not blessed( $_[0] ) };
+        *is_plain_arrayref = sub { ref( $_[0] ) eq 'ARRAY' and not Scalar::Util::blessed( $_[0] ) };
     }
 }
 

@@ -4,7 +4,7 @@ List::Flat - Functions to flatten a structure of array references
 
 # VERSION
 
-This documentation refers to version 0.001\_003
+This documentation refers to version 0.002
 
 # SYNOPSIS
 

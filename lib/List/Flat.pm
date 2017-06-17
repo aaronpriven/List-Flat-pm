@@ -3,7 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = "0.001_003";
+our $VERSION = "0.002";
 $VERSION = eval $VERSION;
 
 use Exporter 5.57 'import';
@@ -140,7 +140,7 @@ List::Flat - Functions to flatten a structure of array references
 
 =head1 VERSION
 
-This documentation refers to version 0.001_003
+This documentation refers to version 0.002
 
 =head1 SYNOPSIS
 

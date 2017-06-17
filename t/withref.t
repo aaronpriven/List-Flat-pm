@@ -7,7 +7,7 @@ BEGIN {
 
 use List::Flat(qw/flat flat_f flat_r/);
 
-diag("Use perl's ref function for checking array references");
+note("Use perl's ref function for checking array references");
 
 require './t/lib/list_flat.pl';
 

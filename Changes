@@ -2,6 +2,8 @@ Revision history for Perl extension List-Flat
 
 {{$NEXT}}
 
+    - First non-alpha release
+
 0.001_003 2017-06-11T19:46:29Z
 
     - Implement slightly faster tail call from flat() and 

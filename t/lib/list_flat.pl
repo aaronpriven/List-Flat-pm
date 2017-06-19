@@ -46,18 +46,18 @@ my @test_blessed_list  = flat(@blessed_list);
 my @testf_blessed_list = flat_f(@blessed_list);
 my @testr_blessed_list = flat_r(@blessed_list);
 
-is( Scalar::Util::blessed $blessed_list[1],
-    Scalar::Util::blessed $test_blessed_list[1],
+is( (Scalar::Util::blessed ($blessed_list[1])),
+    (Scalar::Util::blessed ($test_blessed_list[1])),
     "flat: Blessed member is not flattened"
 );
 
-is( Scalar::Util::blessed $blessed_list[1],
-    Scalar::Util::blessed $testr_blessed_list[1],
+is( (Scalar::Util::blessed ($blessed_list[1])),
+    (Scalar::Util::blessed ($testr_blessed_list[1])),
     "flat_r: Blessed member is not flattened"
 );
 
-is( Scalar::Util::blessed $blessed_list[1],
-    Scalar::Util::blessed $testf_blessed_list[1],
+is( (Scalar::Util::blessed ($blessed_list[1])),
+    (Scalar::Util::blessed ($testf_blessed_list[1])),
     "flat_f: Blessed member is not flattened"
 );
 

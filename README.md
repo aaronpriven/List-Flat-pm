@@ -147,15 +147,9 @@ There are several other modules on CPAN that do similar things.
     This is very fast and is worth using if one can accept its limitations.
     These are, however, significant:
 
-    - It flattens blessed array references as well as unblessed ones,
-    which means that any array-based objects (for example,
-    [Path::Tiny](https://metacpan.org/pod/Path::Tiny) objects) will be flattened as well.
-    Array-based objects aren't all that common, but that's not usually
-    what's desired.
     - Like all XS modules it requires a C compiler on the host system to be
     installed, or some kind of special binary installation (e.g., ActiveState's 
     ppm).
-    - It goes into an infinite loop with circular references. 
     - It must be passed an array refeernce rather than a list.
 
     It does have the potentially useful feature of being able to specify

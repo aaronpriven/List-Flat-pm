@@ -289,21 +289,9 @@ These are, however, significant:
 
 =item *
 
-It flattens blessed array references as well as unblessed ones,
-which means that any array-based objects (for example,
-L<Path::Tiny|Path::Tiny> objects) will be flattened as well.
-Array-based objects aren't all that common, but that's not usually
-what's desired.
-
-=item *
-
 Like all XS modules it requires a C compiler on the host system to be
 installed, or some kind of special binary installation (e.g., ActiveState's 
 ppm).
-
-=item *
-
-It goes into an infinite loop with circular references. 
 
 =item *
 
